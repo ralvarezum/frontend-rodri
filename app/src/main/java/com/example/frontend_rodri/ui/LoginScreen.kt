@@ -14,9 +14,9 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
-    modifier: Modifier = Modifier,
     viewModel: LoginViewModel = viewModel(),
-    onLoginSuccess: (String) -> Unit // Recibe una función para redirigir al usuario
+    onLoginSuccess: (String, String) -> Unit,
+    onNavigateToRegister: () -> Unit
 ) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -24,7 +24,7 @@ fun LoginScreen(
     val coroutineScope = rememberCoroutineScope()
 
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
         verticalArrangement = Arrangement.Center
@@ -35,9 +35,7 @@ fun LoginScreen(
             label = { Text("Usuario") },
             modifier = Modifier.fillMaxWidth()
         )
-
         Spacer(modifier = Modifier.height(16.dp))
-
         TextField(
             value = password,
             onValueChange = { password = it },
@@ -45,15 +43,13 @@ fun LoginScreen(
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth()
         )
-
         Spacer(modifier = Modifier.height(16.dp))
-
         Button(
             onClick = {
                 coroutineScope.launch {
                     viewModel.loginUser(username, password,
                         onSuccess = { response ->
-                            onLoginSuccess(username) // Redirige al HomeScreen con el nombre de usuario
+                            onLoginSuccess(response.token, username) //TOKEN Y USERNAME
                         },
                         onError = { error ->
                             Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
@@ -65,6 +61,14 @@ fun LoginScreen(
         ) {
             Text("Iniciar sesión")
         }
+        Spacer(modifier = Modifier.height(8.dp))
+        Button(
+            onClick = {
+                onNavigateToRegister()
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Registrarse")
+        }
     }
 }
-

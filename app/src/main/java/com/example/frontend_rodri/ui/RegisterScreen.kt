@@ -16,79 +16,110 @@ import kotlinx.coroutines.launch
 fun RegisterScreen(
     modifier: Modifier = Modifier,
     viewModel: RegisterViewModel = viewModel(),
-    onNavigateToLogin: () -> Unit // Función de navegación
+    onNavigateToLogin: () -> Unit
 ) {
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
-    Column(
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center
-    ) {
-        TextField(
-            value = username,
-            onValueChange = { username = it },
-            label = { Text("Usuario") },
-            modifier = Modifier.fillMaxWidth()
-        )
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center
+        ) {
+            TextField(
+                value = username,
+                onValueChange = { username = it },
+                label = { Text("Usuario") },
+                modifier = Modifier.fillMaxWidth()
+            )
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        TextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth()
-        )
+            TextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth()
+            )
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        TextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Contraseña") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
-        )
+            TextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Contraseña") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth()
+            )
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        Button(
-            onClick = {
-                println("Botón de registrar presionado")
-                coroutineScope.launch {
-                    try {
-                        viewModel.registerUser(username, email, password,
-                            onSuccess = {
-                                println("Usuario registrado con éxito")
-                            },
-                            onError = { error ->
-                                println("Error al registrar usuario: $error")
+            Button(
+                onClick = {
+                    coroutineScope.launch {
+                        try {
+                            viewModel.registerUser(
+                                username = username,
+                                email = email,
+                                password = password,
+                                onSuccess = {
+                                    coroutineScope.launch {
+                                        snackbarHostState.showSnackbar("Usuario registrado con éxito")
+                                    }
+                                    Toast.makeText(
+                                        context,
+                                        "Usuario registrado con éxito",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    onNavigateToLogin()
+                                },
+                                onError = { error ->
+                                    coroutineScope.launch {
+                                        snackbarHostState.showSnackbar("Error al registrar usuario: $error")
+                                    }
+                                    Toast.makeText(
+                                        context,
+                                        "Error al registrar usuario: $error",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            )
+                        } catch (e: Exception) {
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("Excepción: ${e.message}")
                             }
-                        )
-                    } catch (e: Exception) {
-                        println("Excepción al intentar registrar: ${e.message}")
+                            Toast.makeText(
+                                context,
+                                "Excepción: ${e.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     }
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Registrar")
-        }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Registrar")
+            }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // Botón para ir a la pantalla de Login
-        Button(
-            onClick = { onNavigateToLogin() }, // Navega a LoginScreen
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("¿Ya tienes una cuenta? Inicia sesión")
+
+            Button(
+                onClick = { onNavigateToLogin() },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("¿Ya tienes una cuenta? Inicia sesión")
+            }
         }
     }
 }
-

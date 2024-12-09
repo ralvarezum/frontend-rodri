@@ -1,5 +1,6 @@
 package com.example.frontend_rodri.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.frontend_rodri.models.LoginResponse
@@ -12,6 +13,7 @@ class LoginViewModel(private val userRepository: UserRepository = UserRepository
         viewModelScope.launch {
             try {
                 val response = userRepository.login(username, password)
+                Log.d("LoginViewModel", "Token recibido: ${response.token}")
                 onSuccess(response)
             } catch (e: Exception) {
                 onError(e.message ?: "Error desconocido")

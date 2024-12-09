@@ -4,20 +4,19 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.navArgument
+import com.example.frontend_rodri.ui.DeviceSelectionScreen
 import com.example.frontend_rodri.ui.HomeScreen
 import com.example.frontend_rodri.ui.LoginScreen
 import com.example.frontend_rodri.ui.RegisterScreen
+import com.example.frontend_rodri.viewmodel.SharedViewModel
 import com.example.frontend_rodri.ui.theme.FrontendrodriTheme
 
 class MainActivity : ComponentActivity() {
@@ -35,6 +34,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainApp() {
     val navController = rememberNavController()
+    val sharedViewModel = viewModel<SharedViewModel>()
 
     NavHost(navController = navController, startDestination = "register") {
         composable("register") {
@@ -42,9 +42,11 @@ fun MainApp() {
         }
         composable("login") {
             LoginScreen(
-                onLoginSuccess = { username ->
-                    navController.navigate("home/$username") // Navega a HomeScreen con el nombre de usuario
-                }
+                onLoginSuccess = { token, username ->
+                    sharedViewModel.setToken(token)
+                    navController.navigate("home/$username")
+                },
+                onNavigateToRegister = { navController.navigate("register") }
             )
         }
         composable(
@@ -52,8 +54,16 @@ fun MainApp() {
             arguments = listOf(navArgument("username") { type = NavType.StringType })
         ) { backStackEntry ->
             val username = backStackEntry.arguments?.getString("username") ?: "Usuario"
-            HomeScreen(username = username)
+            HomeScreen(
+                username = username,
+                onNavigateToDeviceSelection = { navController.navigate("deviceSelection") }
+            )
+        }
+        composable("deviceSelection") {
+            DeviceSelectionScreen(
+                sharedViewModel = sharedViewModel,
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
     }
 }
-
